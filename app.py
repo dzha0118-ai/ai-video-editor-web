@@ -25,7 +25,7 @@ from modules.renderer import VideoRenderer
 from modules.audio_processor import AudioProcessor
 from modules.visual_analyzer import VisualAnalyzer
 from modules.intent_parser import IntentParser
-from modules.config import MAX_UPLOAD_MB, FFMPEG_PATH
+from modules.config import MAX_UPLOAD_MB, FFMPEG_PATH, print_config_status
 
 # ========== 配置 ==========
 BASE_DIR = Path(__file__).parent.resolve()
@@ -45,17 +45,27 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 # 任务状态存储
 JOB_STATUS = {}  # job_id -> {status, progress, message, output_path}
 
-# 启动时检查 FFmpeg
-def _check_ffmpeg():
+# 启动时检查 FFmpeg 和打印配置状态
+def _startup_checks():
     import subprocess
+    print("\n" + "="*50)
+    print("[ClipAI] 启动检查...")
+    print("="*50)
+    
+    # 打印配置状态
+    print_config_status()
+    
+    # 检查 FFmpeg
     try:
         subprocess.run([FFMPEG_PATH, "-version"], capture_output=True, check=True)
-        print(f"[ClipAI] FFmpeg ready: {FFMPEG_PATH}")
+        print(f"[ClipAI] ✅ FFmpeg ready: {FFMPEG_PATH}")
     except Exception as e:
-        print(f"[ClipAI] WARNING: FFmpeg check failed: {e}")
-        print(f"[ClipAI] Please install FFmpeg and set path in config.toml")
+        print(f"[ClipAI] ⚠️ FFmpeg check failed: {e}")
+        print(f"[ClipAI] 请安装 FFmpeg 并设置环境变量 FFMPEG_PATH")
+    
+    print("="*50 + "\n")
 
-_check_ffmpeg()
+_startup_checks()
 
 # ========== 路由 ==========
 
