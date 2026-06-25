@@ -169,6 +169,47 @@ docker run -p 8000:8000 \
 4. 在 Environment 页面添加 `DEEPSEEK_API_KEY`（可选，留空即 SaaS 模式）
 5. 部署完成
 
+### Hugging Face Spaces 部署（免费，无需银行卡）
+
+**注意：Hugging Face 免费 Space 会在 15 分钟无活动后自动休眠，下次访问需等待唤醒。**
+
+#### 部署步骤
+
+1. 打开 [https://huggingface.co/spaces](https://huggingface.co/spaces)，登录账号
+2. 点击 **Create new Space**
+3. 填写信息：
+   - **Space name**: `ai-video-editor`（或任意名称）
+   - **License**: MIT
+   - **Space SDK**: 选择 **Docker**（空白）
+   - **Space hardware**: CPU free（默认）
+   - 其他保持默认
+4. 在 **Files** 标签页，点击 **Upload files**，上传本仓库所有文件
+   - 或选择 **Connect to GitHub**，连接你的 GitHub 仓库
+5. 等待自动构建（约 2-5 分钟）
+
+#### 配置环境变量
+
+构建完成后，进入 **Settings → Variables and Secrets**：
+
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `DEEPSEEK_API_KEY` | `sk-xxx` | 你的 DeepSeek Key（可选，留空走 SaaS 模式） |
+| `MAX_UPLOAD_MB` | `50` | Hugging Face 免费版建议设为 50（存储限制） |
+
+点击 **Save** 后 Space 会自动重启。
+
+####  Hugging Face 限制
+
+| 限制项 | 免费版 | 说明 |
+|--------|--------|------|
+| 内存 | 2 GB | 处理 1080p 视频可能吃紧，建议上传 720p 以下 |
+| 存储 | 20 GB | 包含系统和依赖，实际可用约 10 GB |
+| 休眠 | 15 分钟无活动 | 休眠后首次访问需等待 30-60 秒唤醒 |
+| 上传大小 | 约 50 MB | 取决于具体硬件限制 |
+| 单次运行时长 | 无硬性限制 | 但长视频处理可能超时 |
+
+> 💡 **建议**：Hugging Face 适合演示和轻量使用。如果需要处理大视频或常驻服务，建议使用 Render 或其他 VPS。
+
 ### 生产环境最佳实践
 
 - **永远不要**将 `.env` 文件或 `config.toml` 提交到 Git（已配置 `.gitignore`）
@@ -188,7 +229,7 @@ ai-video-editor-web/
 ├── .gitignore               # Git 忽略配置（含 .env, config.toml）
 ├── requirements.txt          # Python 依赖
 ├── setup_ffmpeg.py           # FFmpeg 自动配置脚本
-├── Dockerfile               # Docker 构建
+├── Dockerfile               # Docker 构建（支持 Render + Hugging Face）
 ├── render.yaml              # Render 部署配置
 ├── modules/
 │   ├── config.py            # 配置加载（环境变量优先）

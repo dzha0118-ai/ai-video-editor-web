@@ -19,6 +19,9 @@ RUN mkdir -p uploads outputs temp
 
 COPY . .
 
+# Hugging Face Spaces 标准端口 7860，Render 兼容 8001
+EXPOSE 7860
 EXPOSE 8001
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]
+# 让 app.py 自己读取 PORT 环境变量（Hugging Face 设置 PORT=7860）
+CMD ["python", "app.py"]
