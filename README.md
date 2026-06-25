@@ -1,3 +1,13 @@
+---
+title: AI Video Editor
+emoji: 🎬
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # ClipAI — 智能视频剪辑工具
 
 基于 AI + FFmpeg 的本地视频剪辑 Web 应用，支持**用户自带 API Key 的 SaaS 模式**、自动去静音、智能字幕、音频降噪、简单动效。
