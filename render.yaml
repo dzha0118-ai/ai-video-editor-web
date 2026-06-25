@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ai-video-editor-web
+    runtime: docker
+    plan: free
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        value: ""
+      - key: MAX_UPLOAD_MB
+        value: "500"
+    healthCheckPath: /api/history
