@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipAI — 智能视频剪辑</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <span class="brand-name">ClipAI</span>
+        </div>
+        <div class="nav-links">
+            <a href="#upload" class="nav-link active">开始剪辑</a>
+            <a href="#features" class="nav-link">功能</a>
+            <a href="#history" class="nav-link">历史</a>
+        </div>
+    </nav>
+
+    <!-- 主视觉区域 -->
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="hero-line">让 AI 帮你</span>
+                <span class="hero-line accent">剪辑视频</span>
+            </h1>
+            <p class="hero-subtitle">自动去除废话、添加字幕、降噪处理、一键出片。<br>上传视频，剩下的交给 ClipAI。</p>
+            <div class="hero-cta">
+                <a href="#upload" class="btn btn-primary">
+                    <span>上传视频</span>
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                </a>
+                <a href="#features" class="btn btn-ghost">了解功能</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="film-strip">
+                <div class="film-frame" style="--delay:0s"></div>
+                <div class="film-frame" style="--delay:0.15s"></div>
+                <div class="film-frame" style="--delay:0.3s"></div>
+                <div class="film-frame" style="--delay:0.45s"></div>
+                <div class="film-frame" style="--delay:0.6s"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 上传区域 -->
+    <section id="upload" class="upload-section">
+        <div class="container">
+            <h2 class="section-title">开始创作</h2>
+            
+            <!-- 上传状态：空 -->
+            <div id="dropzone" class="dropzone" data-state="empty">
+                <div class="dropzone-content">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="8" y="12" width="32" height="24" rx="3"/>
+                            <path d="M20 24l4-4 4 4"/>
+                            <path d="M24 20v8"/>
+                            <circle cx="34" cy="16" r="2" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    <p class="dropzone-text">拖拽视频文件到此处，或 <span class="dropzone-browse">点击浏览</span></p>
+                    <p class="dropzone-hint">支持 MP4、MOV、AVI、MKV，最大 500MB</p>
+                    <input type="file" id="fileInput" accept="video/mp4,video/quicktime,video/avi,video/x-matroska" hidden>
+                </div>
+                <div class="dropzone-dragover" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M24 8v20M24 28l-6-6M24 28l6-6"/>
+                    </svg>
+                    <span>释放上传</span>
+                </div>
+            </div>
+
+            <!-- 上传状态：预览 -->
+            <div id="previewPanel" class="preview-panel hidden" data-state="populated">
+                <div class="video-preview">
+                    <video id="previewVideo" controls></video>
+                    <div class="video-badge" id="videoBadge">MP4</div>
+                </div>
+                <div class="video-info">
+                    <p class="video-name" id="videoName">video.mp4</p>
+                    <p class="video-meta" id="videoMeta">00:00 · 0 MB</p>
+                </div>
+            </div>
+
+            <!-- 剪辑参数 -->
+            <div id="configPanel" class="config-panel hidden" data-state="populated">
+                <h3 class="config-title">剪辑选项</h3>
+                
+                <!-- 新增：用户自带 API Key -->
+                <div class="config-row" id="apiKeyRow">
+                    <label class="config-label">DeepSeek API Key</label>
+                    <input 
+                        type="password" 
+                        id="apiKey" 
+                        class="instruction-input" 
+                        style="min-height: 44px; resize: none;"
+                        placeholder="sk-...  在此填入你的 DeepSeek API Key（可选，不填则使用规则引擎）"
+                    >
+                    <p class="config-hint">你的 Key 仅用于本次剪辑，不会存储到服务器。<a href="https://platform.deepseek.com/api_keys" target="_blank">获取 Key →</a></p>
+                </div>
+
+                <!-- 新增：模式切换 + 指令输入 -->
+                <div class="config-row">
+                    <label class="config-label">分析模式</label>
+                    <div class="segmented-control" id="modeSwitcher">
+                        <button class="segment active" data-video-mode="speech">语音模式</button>
+                        <button class="segment" data-video-mode="visual">画面模式</button>
+                    </div>
+                    <p class="config-hint" id="modeHint">适用于口播、播客、Vlog 等有人声的视频。AI 分析语音内容来剪辑。</p>
+                </div>
+
+                <div class="config-row" id="instructionRow">
+                    <label class="config-label">剪辑指令</label>
+                    <textarea 
+                        id="instruction" 
+                        class="instruction-input" 
+                        placeholder="例如：剪掉前10秒的广告，只保留精华部分，目标1分钟&#10;例如：去掉晃动厉害的片段，选最稳定的画面，慢节奏&#10;例如：保留日落和黄金时刻，保留30秒"
+                        rows="3"
+                    ></textarea>
+                    <p class="config-hint">用自然语言描述你的剪辑需求，AI 会理解并执行。</p>
+                </div>
+
+                <div class="config-row">
+                    <label class="config-label">剪辑模式</label>
+                    <div class="segmented-control">
+                        <button class="segment active" data-mode="auto">智能自动</button>
+                        <button class="segment" data-mode="silence">去静音</button>
+                        <button class="segment" data-mode="highlight">精华提取</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label class="config-label">视频风格</label>
+                    <div class="style-pills">
+                        <button class="pill active" data-style="vlog">Vlog 日常</button>
+                        <button class="pill" data-style="podcast">播客口播</button>
+                        <button class="pill" data-style="short">短视频</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label class="config-label">目标时长（可选）</label>
+                    <div class="duration-input">
+                        <input type="number" id="targetDuration" placeholder="例如 60" min="5" max="3600">
+                        <span class="duration-unit">秒</span>
+                    </div>
+                </div>
+
+                <div class="config-row switches">
+                    <label class="switch">
+                        <input type="checkbox" id="optRemoveSilence" checked>
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">自动去除废话和停顿</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="optSubtitle" checked>
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">自动生成字幕</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="optDenoise">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">音频降噪</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="optZoom">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">关键片段放大动效</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="optBgm">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">背景音乐增强</span>
+                    </label>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="startProcess">
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                    <span class="btn-text">开始智能剪辑</span>
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 处理进度 -->
+            <div id="progressPanel" class="progress-panel hidden" data-state="loading">
+                <div class="progress-ring">
+                    <svg viewBox="0 0 120 120">
+                        <circle class="progress-track" cx="60" cy="60" r="52"/>
+                        <circle class="progress-bar" id="progressBar" cx="60" cy="60" r="52" 
+                                stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+                    </svg>
+                    <div class="progress-text">
+                        <span class="progress-percent" id="progressPercent">0</span>
+                        <span class="progress-unit">%</span>
+                    </div>
+                </div>
+                <p class="progress-message" id="progressMessage">准备中...</p>
+                <div class="progress-steps">
+                    <div class="step" data-step="1"><span class="step-num">1</span>音频处理</div>
+                    <div class="step" data-step="2"><span class="step-num">2</span>语音识别</div>
+                    <div class="step" data-step="3"><span class="step-num">3</span>智能分析</div>
+                    <div class="step" data-step="4"><span class="step-num">4</span>视频渲染</div>
+                    <div class="step" data-step="5"><span class="step-num">5</span>完成</div>
+                </div>
+            </div>
+
+            <!-- 完成 -->
+            <div id="resultPanel" class="result-panel hidden" data-state="populated">
+                <div class="result-success">
+                    <svg class="result-check" viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2"/>
+                        <path d="M14 24l7 7 13-13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h3 class="result-title">剪辑完成</h3>
+                    <p class="result-desc" id="resultDesc">原始 5:30 → 精剪 2:15，去除 12 处废话，添加 45 条字幕</p>
+                </div>
+                <div class="result-video" id="resultVideoWrap">
+                    <video id="resultVideo" controls></video>
+                </div>
+                <div class="result-actions">
+                    <a class="btn btn-primary" id="downloadBtn" download>
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4 4m4-4v12"/>
+                        </svg>
+                        <span>下载成片</span>
+                    </a>
+                    <button class="btn btn-ghost" id="newProjectBtn">
+                        <span>新建项目</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 错误状态 -->
+            <div id="errorPanel" class="error-panel hidden" data-state="error">
+                <svg class="error-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="24" cy="24" r="20"/>
+                    <path d="M16 16l16 16M32 16L16 32"/>
+                </svg>
+                <h3 class="error-title">处理失败</h3>
+                <p class="error-desc" id="errorDesc">请检查视频文件格式是否正确</p>
+                <button class="btn btn-ghost" id="retryBtn">重试</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能展示 -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="section-title">功能一览</h2>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">智能去静音</h3>
+                    <p class="feature-desc">自动识别并删除长停顿、语气词和冗余片段，让视频节奏更紧凑。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">自动字幕</h3>
+                    <p class="feature-desc">基于 Whisper 语音识别，生成精准时间轴字幕，支持中英文。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">音频降噪</h3>
+                    <p class="feature-desc">频域降噪算法去除环境噪音、电流声，提升人声清晰度。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">关键放大</h3>
+                    <p class="feature-desc">关键片段自动添加缓慢放大动效，提升画面张力和视觉焦点。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">多风格预设</h3>
+                    <p class="feature-desc">Vlog、播客、短视频三种风格预设，一键匹配最优剪辑策略。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">实时进度</h3>
+                    <p class="feature-desc">WebSocket 实时推送处理进度，每一步清晰可见，无需盲目等待。</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- 历史任务 -->
+    <section id="history" class="history-section">
+        <div class="container">
+            <h2 class="section-title">最近任务</h2>
+            <div id="historyList" class="history-list" data-state="empty">
+                <div class="history-empty">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="8" y="12" width="32" height="24" rx="3"/>
+                        <path d="M16 20l6 4-6 4"/>
+                    </svg>
+                    <p>暂无任务，上传视频开始你的第一个项目</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>ClipAI — 本地 AI 视频剪辑工具</p>
+            <p class="footer-meta">基于 Whisper + FFmpeg + Open Design 构建</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
